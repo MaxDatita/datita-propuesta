@@ -1,36 +1,85 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# IntelliAgency - Landing Page
 
-## Getting Started
+Una landing page moderna y elegante para una agencia de Inteligencia Artificial, construida con Next.js, TypeScript y Tailwind CSS.
 
-First, run the development server:
+## 🚀 Características
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+- **Diseño Moderno**: Hero section con gradiente diagonal y patrones visuales
+- **Responsive**: Optimizado para todos los dispositivos
+- **Tipografía Elegante**: Fuentes serif para títulos y sans-serif para contenido
+- **Animaciones**: Elementos flotantes y transiciones suaves
+- **Componentes Reutilizables**: Header y Hero como componentes separados
+
+## 🛠️ Tecnologías
+
+- **Next.js 14** - Framework de React
+- **TypeScript** - Tipado estático
+- **Tailwind CSS** - Framework de CSS utilitario
+- **React** - Biblioteca de interfaz de usuario
+
+## 📁 Estructura del Proyecto
+
+```
+src/
+├── app/
+│   ├── globals.css      # Estilos globales y fuentes
+│   ├── layout.tsx       # Layout principal
+│   └── page.tsx         # Página principal
+├── components/
+│   ├── Header.tsx       # Componente de navegación
+│   └── Hero.tsx         # Sección hero principal
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 🎨 Diseño
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+El diseño emula una landing page moderna con:
+- Fondo degradado diagonal (blanco a morado)
+- Patrones de rayas diagonales sutiles
+- Tipografía serif elegante para títulos
+- Botón CTA prominente
+- Elementos flotantes animados
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 🚀 Instalación y Ejecución
 
-## Learn More
+1. **Instalar dependencias:**
+   ```bash
+   npm install
+   ```
 
-To learn more about Next.js, take a look at the following resources:
+2. **Ejecutar en desarrollo:**
+   ```bash
+   npm run dev
+   ```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+3. **Construir para producción:**
+   ```bash
+   npm run build
+   ```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+4. **Ejecutar en producción:**
+   ```bash
+   npm start
+   ```
 
-## Deploy on Vercel
+## 🌐 Acceso
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- **Desarrollo**: http://localhost:3000
+- **Producción**: Configurar según tu hosting
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## 📱 Responsive Design
+
+- **Mobile First**: Diseño optimizado para móviles
+- **Breakpoints**: Adaptable a tablets y desktop
+- **Navegación**: Menú hamburguesa para móviles
+
+## 🎯 Personalización
+
+Puedes personalizar fácilmente:
+- Colores en `tailwind.config.ts`
+- Fuentes en `globals.css`
+- Contenido en los componentes
+- Logo y branding en `Header.tsx`
+
+## 📄 Licencia
+
+Este proyecto está bajo la licencia MIT.
