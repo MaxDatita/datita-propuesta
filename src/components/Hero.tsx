@@ -31,16 +31,11 @@ const styles = `
     }
   }
 
-  .skip-to-contact {
-    animation: fadeIn 0.9s ease-out 1.1s both;
-  }
-
   .skip-to-contact-chevron {
     animation: skipToContact 2.4s ease-in-out infinite;
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .skip-to-contact,
     .skip-to-contact-chevron {
       animation: none;
     }
@@ -203,6 +198,12 @@ export default function Hero() {
           ratios.set(entry.target, entry.intersectionRatio);
         });
 
+        const contact = contactSectionRef.current;
+        if (contact && (ratios.get(contact) ?? 0) >= 0.4) {
+          setShowSkip(false);
+          return;
+        }
+
         let best: HTMLElement | null = null;
         let bestRatio = 0;
         ratios.forEach((ratio, el) => {
@@ -232,6 +233,7 @@ export default function Hero() {
 
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     container.style.scrollSnapType = 'none';
+    setShowSkip(false);
     container.scrollTo({
       top: contact.offsetTop,
       behavior: prefersReducedMotion ? 'auto' : 'smooth',
@@ -677,7 +679,7 @@ export default function Hero() {
 
         <div
           className={`skip-to-contact pointer-events-none absolute right-4 sm:right-8 z-30 inline-flex w-fit flex-col items-stretch gap-1.5 text-[11px] leading-none transition-opacity duration-300 ${
-            showSkip ? 'opacity-100' : 'opacity-0'
+            showSkip ? 'opacity-100' : 'hidden opacity-0'
           }`}
           style={{ bottom: 'max(1.5rem, calc(env(safe-area-inset-bottom) + 0.75rem))' }}
           aria-hidden={!showSkip}
