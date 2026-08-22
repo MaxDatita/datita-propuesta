@@ -19,6 +19,32 @@ const styles = `
   .animate-fade-in {
     animation: fadeIn 1s ease-out 0.5s forwards;
   }
+
+  @keyframes skipToContact {
+    0%, 100% {
+      opacity: 0.55;
+      transform: translateY(-2px);
+    }
+    50% {
+      opacity: 1;
+      transform: translateY(2px);
+    }
+  }
+
+  .skip-to-contact {
+    animation: fadeIn 0.9s ease-out 1.1s both;
+  }
+
+  .skip-to-contact-chevron {
+    animation: skipToContact 2.4s ease-in-out infinite;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .skip-to-contact,
+    .skip-to-contact-chevron {
+      animation: none;
+    }
+  }
 `;
 
 // Inyectar estilos en el head
@@ -50,23 +76,39 @@ const AnimatedText = ({ text, className = '', delay = 0 }: { text: string, class
     return () => observer.disconnect();
   }, [delay]);
 
+  const tokens = text.split(/(\s+)/);
+  let charOffset = 0;
+
   return (
     <div ref={ref} className={className}>
-      {text.split('').map((char, charIndex) => (
-        <span
-          key={charIndex}
-          className={`inline-block transition-all duration-500 ${
-            isVisible 
-              ? 'opacity-100 translate-x-0' 
-              : 'opacity-0 translate-x-4'
-          }`}
-          style={{
-            transitionDelay: `${(charIndex * 50)}ms`
-          }}
-        >
-          {char === ' ' ? '\u00A0' : char}
-        </span>
-      ))}
+      {tokens.map((token, tokenIndex) => {
+        if (/^\s+$/.test(token)) {
+          return <span key={tokenIndex}>{' '}</span>;
+        }
+
+        const start = charOffset;
+        charOffset += token.length;
+
+        return (
+          <span key={tokenIndex} className="inline-block whitespace-nowrap">
+            {token.split('').map((char, i) => (
+              <span
+                key={i}
+                className={`inline-block transition-all duration-500 ${
+                  isVisible
+                    ? 'opacity-100 translate-x-0'
+                    : 'opacity-0 translate-x-4'
+                }`}
+                style={{
+                  transitionDelay: `${(start + i) * 50}ms`,
+                }}
+              >
+                {char}
+              </span>
+            ))}
+          </span>
+        );
+      })}
     </div>
   );
 };
@@ -137,6 +179,10 @@ const AnimatedNumber = ({ value, suffix = '', className = '', delay = 0 }: { val
 
 export default function Hero() {
   const [scrollY, setScrollY] = useState(0);
+  const [skipTheme, setSkipTheme] = useState<'dark' | 'light'>('dark');
+  const [showSkip, setShowSkip] = useState(true);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const contactSectionRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
     const handleScroll = () => setScrollY(window.scrollY);
@@ -144,10 +190,65 @@ export default function Hero() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  useEffect(() => {
+    const container = scrollContainerRef.current;
+    if (!container) return;
+
+    const sections = container.querySelectorAll<HTMLElement>('[data-skip-theme]');
+    const ratios = new Map<Element, number>();
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          ratios.set(entry.target, entry.intersectionRatio);
+        });
+
+        let best: HTMLElement | null = null;
+        let bestRatio = 0;
+        ratios.forEach((ratio, el) => {
+          if (ratio > bestRatio) {
+            bestRatio = ratio;
+            best = el as HTMLElement;
+          }
+        });
+
+        if (!best || bestRatio < 0.35) return;
+
+        const active = best as HTMLElement;
+        setShowSkip(active.dataset.skipHide !== 'true');
+        setSkipTheme(active.dataset.skipTheme === 'light' ? 'light' : 'dark');
+      },
+      { root: container, threshold: [0, 0.25, 0.5, 0.75, 1] }
+    );
+
+    sections.forEach((section) => observer.observe(section));
+    return () => observer.disconnect();
+  }, []);
+
+  const scrollToContact = () => {
+    const container = scrollContainerRef.current;
+    const contact = contactSectionRef.current;
+    if (!container || !contact) return;
+
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    container.style.scrollSnapType = 'none';
+    container.scrollTo({
+      top: contact.offsetTop,
+      behavior: prefersReducedMotion ? 'auto' : 'smooth',
+    });
+
+    window.setTimeout(() => {
+      container.style.scrollSnapType = '';
+    }, prefersReducedMotion ? 0 : 1200);
+  };
+
+  const skipOnLight = skipTheme === 'light';
+
   return (
-    <div className="snap-y snap-mandatory h-screen overflow-y-scroll">
+    <div className="relative h-screen">
+      <div ref={scrollContainerRef} className="h-full snap-y snap-mandatory overflow-y-scroll">
       {/* Hero Section - Pantalla completa */}
-      <section className="snap-start relative h-screen flex items-center justify-center px-6 lg:px-8 overflow-hidden">
+      <section data-skip-theme="dark" className="snap-start relative h-screen flex items-center justify-center px-6 lg:px-8 overflow-hidden">
         {/* Background Pattern - PrismaticBurst */}
         <div className="absolute inset-0 bg-black">
           <PrismaticBurst
@@ -203,7 +304,7 @@ export default function Hero() {
       </section>
 
       {/* Primera sección blanca */}
-      <section className="snap-start relative h-screen flex items-center justify-center px-6 lg:px-8 bg-white">
+      <section data-skip-theme="light" className="snap-start relative h-screen flex items-center justify-center px-6 lg:px-8 bg-white">
         <div className="text-center max-w-4xl mx-auto">
           <div className="text-4xl md:text-6xl lg:text-7xl font-sans font-light text-gray-900 mb-8 leading-tight">
             <AnimatedText
@@ -221,7 +322,7 @@ export default function Hero() {
       </section>
 
       {/* Segunda sección blanca - Frase del CEO de Google */}
-      <section className="snap-start relative h-screen flex items-center justify-center px-6 lg:px-8 bg-white overflow-hidden">
+      <section data-skip-theme="light" className="snap-start relative h-screen flex items-center justify-center px-6 lg:px-8 bg-white overflow-hidden">
         <div className="text-center max-w-5xl mx-auto">
           <div className="text-2xl md:text-4xl lg:text-5xl font-sans font-light text-gray-800 leading-relaxed">
               <AnimatedText
@@ -248,12 +349,10 @@ export default function Hero() {
                 delay={200}
               />
             </span>
-            <span className="whitespace-pre-wrap">
-              <AnimatedText
-                text=" que transformará todo lo que hacemos.'"
-                delay={200}
-              />
-            </span>
+            <AnimatedText
+              text=" que transformará todo lo que hacemos.'"
+              delay={200}
+            />
           </div>
           <AnimatedText
             text="— Sundar Pichai, CEO de Google"
@@ -265,7 +364,7 @@ export default function Hero() {
       </section>
 
       {/* Tercera sección - Presentación del personaje */}
-      <section className="snap-start relative h-screen flex items-center justify-center px-6 lg:px-8 overflow-hidden">
+      <section data-skip-theme="dark" className="snap-start relative h-screen flex items-center justify-center px-6 lg:px-8 overflow-hidden">
         {/* Background con gradiente */}
         <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-cyan-900 to-emerald-900"></div>
 
@@ -327,7 +426,7 @@ export default function Hero() {
       </section>
 
       {/* Cuarta sección - Estadísticas de IA */}
-      <section className="snap-start relative h-screen flex items-center justify-center px-6 lg:px-8 overflow-hidden">
+      <section data-skip-theme="dark" className="snap-start relative h-screen flex items-center justify-center px-6 lg:px-8 overflow-hidden">
         {/* Background con gradiente */}
         <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-cyan-900 to-emerald-900"></div>
 
@@ -423,7 +522,13 @@ export default function Hero() {
       </section>
 
       {/* Quinta sección - Contacto */}
-      <section className="snap-start relative h-screen flex items-center justify-center px-6 lg:px-8 overflow-hidden">
+      <section
+        id="contacto"
+        ref={contactSectionRef}
+        data-skip-theme="dark"
+        data-skip-hide="true"
+        className="snap-start relative h-screen flex items-center justify-center px-6 lg:px-8 overflow-hidden"
+      >
         {/* Background con gradiente */}
         <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-cyan-900 to-emerald-900"></div>
 
@@ -568,6 +673,51 @@ export default function Hero() {
           </div>
         </div>
       </section>
+    </div>
+
+        <div
+          className={`skip-to-contact pointer-events-none absolute right-4 sm:right-8 z-30 inline-flex w-fit flex-col items-stretch gap-1.5 text-[11px] leading-none transition-opacity duration-300 ${
+            showSkip ? 'opacity-100' : 'opacity-0'
+          }`}
+          style={{ bottom: 'max(1.5rem, calc(env(safe-area-inset-bottom) + 0.75rem))' }}
+          aria-hidden={!showSkip}
+        >
+          <label
+            htmlFor="skip-to-contact"
+            className={`pointer-events-auto cursor-pointer text-center font-light tracking-wide transition-colors duration-300 ${
+              skipOnLight
+                ? 'text-slate-700 hover:text-slate-900'
+                : 'text-white/80 hover:text-white'
+            } ${showSkip ? '' : 'pointer-events-none'}`}
+          >
+            Hablemos
+          </label>
+          <button
+            id="skip-to-contact"
+            type="button"
+            onClick={scrollToContact}
+            tabIndex={showSkip ? 0 : -1}
+            aria-label="Hablemos"
+            className={`pointer-events-auto flex h-[calc(1em+8px)] w-full items-center justify-center overflow-hidden rounded-full border p-0 backdrop-blur-md transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 ${
+              skipOnLight
+                ? 'border-slate-900/20 bg-slate-900/10 text-slate-900 shadow-[0_8px_24px_rgba(15,23,42,0.12)] hover:border-slate-900/35 hover:bg-slate-900/15 focus-visible:ring-cyan-700/50'
+                : 'border-white/25 bg-white/10 text-white/90 shadow-[0_8px_30px_rgba(0,0,0,0.28)] hover:border-white/40 hover:bg-white/16 hover:text-white focus-visible:ring-cyan-300/70'
+            } ${showSkip ? '' : 'pointer-events-none'}`}
+          >
+            <svg
+              className={`skip-to-contact-chevron h-[0.7em] w-[0.7em] ${
+                skipOnLight ? 'text-cyan-700' : 'text-cyan-200'
+              }`}
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.25"
+              aria-hidden="true"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 9l6 6 6-6" />
+            </svg>
+          </button>
+        </div>
     </div>
   );
 }
